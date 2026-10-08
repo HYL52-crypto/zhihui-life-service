@@ -1,0 +1,50 @@
+  server:
+    port: 8081
+  spring:
+    kafka:
+      bootstrap-servers: localhost:9092
+      producer:
+        # 消息体是订单 JSON，序列化方式在 KafkaConfig 中显式指定为 String
+        acks: all
+        retries: 3
+      consumer:
+        group-id: seckill-order-group
+        # 无 offset 时从头消费，避免本地调试漏掉历史消息
+        auto-offset-reset: earliest
+        key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      listener:
+        # 手动提交 offset：业务处理成功才 ack，保证消息不丢
+        ack-mode: manual_immediate
+    application:
+      name: hmdp
+    datasource:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://127.0.0.1:3306/dingping?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=utf8
+      username: root
+      password: 123321
+    redis:
+      host: 127.0.0.1
+      port: 6379
+
+      lettuce:
+        pool:
+          max-active: 30
+          max-idle: 15
+          min-idle: 5
+          time-between-eviction-runs: 10s
+    jackson:
+      default-property-inclusion: non_null # JSON处理时忽略非空字段
+  mybatis-plus:
+    type-aliases-package: com.hmdp.entity # 别名扫描包
+  logging:
+    level:
+      com.hmdp: debug
+  # ===================== 智能客服（LangChain4j + DeepSeek） =====================
+  # 去 https://platform.deepseek.com 申请 key 后填到这里（或设环境变量 DEEPSEEK_API_KEY），
+  # 不填则不会创建模型 Bean，项目照常启动，只是 /ai/chat 会提示未启用。
+  ai:
+    deepseek:
+      api-key: ${DEEPSEEK_API_KEY:}
+      base-url: https://api.deepseek.com
+      model: deepseek-chat

@@ -1,0 +1,40 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------------< com.hmdp:hm-dianping >------------------------
+[INFO] Building hm-dianping 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.1.0:resources (default-resources) @ hm-dianping ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 1 resource
+[INFO] Copying 6 resources
+[INFO] 
+[INFO] --- compiler:3.8.1:compile (default-compile) @ hm-dianping ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 90 source files to D:\code\dianping\target\classes
+[INFO] /D:/code/dianping/src/main/java/com/hmdp/ai/ShopAssistantTools.java: D:\code\dianping\src\main\java\com\hmdp\ai\ShopAssistantTools.java使用了未经检查或不安全的操作。
+[INFO] /D:/code/dianping/src/main/java/com/hmdp/ai/ShopAssistantTools.java: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+[INFO] 
+[INFO] --- resources:3.1.0:testResources (default-testResources) @ hm-dianping ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory D:\code\dianping\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.8.1:testCompile (default-testCompile) @ hm-dianping ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 3 source files to D:\code\dianping\target\test-classes
+[INFO] 
+[INFO] --- surefire:2.22.2:test (default-test) @ hm-dianping ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.2.0:jar (default-jar) @ hm-dianping ---
+[INFO] Building jar: D:\code\dianping\target\hm-dianping-0.0.1-SNAPSHOT.jar
+[INFO] 
+[INFO] --- spring-boot:2.3.12.RELEASE:repackage (repackage) @ hm-dianping ---
+[INFO] Replacing main artifact with repackaged archive
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  35.571 s
+[INFO] Finished at: 2026-10-09T02:24:53+08:00
+[INFO] ------------------------------------------------------------------------
