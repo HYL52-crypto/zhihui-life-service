@@ -16,7 +16,7 @@
 | 缓存 | Redis 5 + Caffeine | 分布式缓存 + 本地二级缓存 |
 | 消息 | Kafka 3.9（KRaft 单机） | 异步下单、缓存失效补偿 |
 | 分布式工具 | Redisson 3.13 | 分布式锁、全局 ID 生成 |
-| AI | LangChain4j 0.35.0 + DeepSeek | Function Calling + Redis 会话记忆 |
+| AI | LangChain4j 0.35.0 + 智谱 GLM-4-Flash | Function Calling + Redis 会话记忆（厂商无关，可换任意 OpenAI 兼容模型） |
 | 其他 | Hutool、Lombok、Spring AOP | |
 
 ---
@@ -77,8 +77,13 @@ ZSet 存每次请求的时间戳，`zremrangebyscore` 清掉窗口外的记录�
 比固定窗口计数器更平滑，不会出现窗口边界的 2 倍流量尖刺。
 通过注解声明，支持 GLOBAL / IP / USER 三个维度（未登录时 USER 自动降级为 IP）。
 
-### 9. AI 智能客服（LangChain4j + DeepSeek + Function Calling + Redis 记忆）
+### 9. AI 智能客服（LangChain4j + Function Calling + Redis 记忆）
 `ai/`、`config/AiConfig.java`、`controller/AiChatController.java`
+
+接入层做成**厂商无关**：所有提供 OpenAI 兼容协议的模型都能直接用，换模型只改
+`application.yaml` 里 `ai.llm.api-key / base-url / model` 三个值，Java 代码不动。
+默认用**智谱 GLM-4-Flash**（长期免费、国内直连）；其他可用组合见配置文件注释
+（阿里百炼、硅基流动、DeepSeek 等）。
 
 - **Function Calling**：`@Tool` 标注的 4 个业务方法（搜店 / 查详情 / 预约到店 / 查我的预约），
   由大模型自己决定要不要调、传什么参数；预约会真实写进 `tb_appointment` 表。
@@ -109,7 +114,8 @@ mysql -uroot -p dingping < src/main/resources/db/appointment.sql
 # 2. 修改 application.yaml 里的数据库地址 / 账号 / 密码
 
 # 3.（可选）启用 AI 智能客服
-export DEEPSEEK_API_KEY=sk-xxxxxx   # 不配也能启动，只是 /ai/chat 不可用
+export AI_API_KEY=sk-xxxxxx         # 不配也能启动，只是 /ai/chat 不可用
+#   换模型只需再改 application.yaml 里的 ai.llm.base-url 和 ai.llm.model
 
 # 4. 打包并启动
 mvn package -DskipTests

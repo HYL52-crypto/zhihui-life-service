@@ -40,11 +40,18 @@
   logging:
     level:
       com.hmdp: debug
-  # ===================== 智能客服（LangChain4j + DeepSeek） =====================
-  # 去 https://platform.deepseek.com 申请 key 后填到这里（或设环境变量 DEEPSEEK_API_KEY），
+  # ===================== 智能客服（LangChain4j + 大模型） =====================
+  # 厂商无关：换模型只改下面三个值，Java 代码不用动。
+  # api-key 支持两个环境变量，优先读 AI_API_KEY，其次 DEEPSEEK_API_KEY。
   # 不填则不会创建模型 Bean，项目照常启动，只是 /ai/chat 会提示未启用。
+  #
+  # 当前默认：智谱 GLM-4-Flash（长期免费、国内直连、支持 Function Calling）
+  # 其他可直接替换的组合（都支持 Function Calling）：
+  #   阿里百炼：base-url: https://dashscope.aliyuncs.com/compatible-mode/v1  model: qwen-plus
+  #   硅基流动：base-url: https://api.siliconflow.cn/v1                      model: Qwen/Qwen2.5-7B-Instruct
+  #   DeepSeek：base-url: https://api.deepseek.com                           model: deepseek-chat
   ai:
-    deepseek:
-      api-key: ${DEEPSEEK_API_KEY:}
-      base-url: https://api.deepseek.com
-      model: deepseek-chat
+    llm:
+      api-key: ${AI_API_KEY:${ZHIPU_API_KEY:${DEEPSEEK_API_KEY:}}}
+      base-url: https://open.bigmodel.cn/api/paas/v4
+      model: glm-4-flash

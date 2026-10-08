@@ -18,12 +18,13 @@ import java.time.Duration;
 /**
  * 智能客服装配。
  * <p>
- * 为什么用 DeepSeek 却写 OpenAiChatModel：
- * DeepSeek 的 HTTP 接口是 OpenAI 兼容协议（/v1/chat/completions，请求响应字段一致），
- * 所以直接复用 langchain4j 的 OpenAI 客户端，只把 baseUrl 换成 https://api.deepseek.com 即可，
- * 不需要额外引 deepseek 专用的依赖。
+ * 为什么写的是 OpenAiChatModel：
+ * 几乎所有主流大模型厂商（DeepSeek、智谱、阿里百炼、硅基流动…）都提供
+ * OpenAI 兼容协议（/chat/completions，请求响应字段一致），
+ * 所以复用 langchain4j 的 OpenAI 客户端，只把 baseUrl / model 换掉即可，
+ * 不需要为每家厂商单独引一个依赖。
  * <p>
- * 用 @ConditionalOnProperty 的目的是：没配 api-key 时项目照样能启动，
+ * 条件装配的目的：没配 api-key 时项目照样能启动，
  * 只是 /ai/chat 会返回"未配置"，不会因为缺 key 导致整个服务起不来。
  */
 @Configuration
@@ -55,7 +56,7 @@ public class AiConfig {
      * 所以必须显式判断「非空」。
      */
     @Bean
-    @ConditionalOnExpression("'${ai.deepseek.api-key:}' != ''")
+    @ConditionalOnExpression("'${ai.llm.api-key:}' != ''")
     public ChatLanguageModel chatLanguageModel(AiProperties properties) {
         return OpenAiChatModel.builder()
                 .baseUrl(properties.getBaseUrl())
@@ -70,7 +71,7 @@ public class AiConfig {
     }
 
     @Bean
-    @ConditionalOnExpression("'${ai.deepseek.api-key:}' != ''")
+    @ConditionalOnExpression("'${ai.llm.api-key:}' != ''")
     public Assistant assistant(ChatLanguageModel chatLanguageModel) {
         // ChatMemoryProvider：每个 sessionId 一份独立的滑动窗口记忆
         ChatMemoryProvider chatMemoryProvider = memoryId -> MessageWindowChatMemory.builder()
