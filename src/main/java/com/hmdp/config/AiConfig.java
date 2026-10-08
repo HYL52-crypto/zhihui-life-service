@@ -31,14 +31,15 @@ import java.time.Duration;
 public class AiConfig {
 
     /** 系统提示词：约束人设 + 告诉它有哪些工具、什么时候该用 */
-    private static final String SYSTEM_PROMPT =
+    private static final String SYSTEM_PROMPT_TEMPLATE =
             "你叫「小鉴」，是雅鉴生活志 App 的智能客服助手。\n"
             + "你的职责：帮用户找店、介绍店铺信息、帮用户预约到店、查询用户已有的预约。\n"
             + "规则：\n"
             + "1. 涉及店铺信息、预约这类实时业务数据时，必须调用工具获取，绝对不能自己编造店铺名、价格、评分。\n"
             + "2. 预约到店前，如果用户没说清时间和哪家店，先用一句话追问，不要凭空替用户决定。\n"
             + "3. 回答简洁口语化，控制在 3 句话以内，不要用 markdown 大标题。\n"
-            + "4. 用户问的如果跟探店、店铺、预约无关，礼貌地说明你只负责本平台的业务。";
+            + "4. 用户问的如果跟探店、店铺、预约无关，礼貌地说明你只负责本平台的业务。\n"
+            + "5. 调用 bookAppointment 或 listMyAppointments 时，sessionId 参数必须原样填：%s";
 
     /** 只保留最近这么多条消息，防止上下文无限膨胀把 token 烧光 */
     private static final int MAX_MESSAGES = 20;
@@ -82,7 +83,8 @@ public class AiConfig {
 
         return AiServices.builder(Assistant.class)
                 .chatLanguageModel(chatLanguageModel)
-                .systemMessageProvider(memoryId -> SYSTEM_PROMPT)
+                // memoryId 就是会话 id，用它拼系统提示词，把 sessionId 交给模型去填工具参数
+                .systemMessageProvider(memoryId -> String.format(SYSTEM_PROMPT_TEMPLATE, memoryId))
                 .chatMemoryProvider(chatMemoryProvider)
                 // 把业务工具挂上去，大模型才能 Function Calling
                 .tools(shopAssistantTools)

@@ -15,6 +15,15 @@
     <description>Demo project for Spring Boot</description>
     <properties>
         <java.version>1.8</java.version>
+        <!--
+            Jackson 版本必须显式抬到 2.13.3。
+            原因：Redisson 3.13.6 会传递引入 jackson-databind 2.11.4，
+            而 langchain4j 底层的 openai4j 在构造请求体时用到了更高版本才有的
+            序列化能力，版本过低会在运行时抛：
+              Unable to create @Body converter for class ChatCompletionRequest
+            这类「编译期没事、一调用就炸」的问题只能靠统一依赖版本解决。
+        -->
+        <jackson.version>2.13.3</jackson.version>
     </properties>
     <dependencies>
         <dependency>
@@ -117,6 +126,46 @@
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-open-ai</artifactId>
             <version>0.35.0</version>
+        </dependency>
+
+        <!--
+            显式锁定 Jackson 的三个核心包版本，覆盖 Redisson 传递进来的 2.11.4。
+            三个要一起锁：databind 依赖 core 与 annotations，只锁一个会出现跨版本不兼容。
+        -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <!--
+            okhttp 也必须抬到 4.x。
+            原因：Redisson 传递引入的是 okhttp 3.14.9，而 langchain4j 底层的 openai4j
+            在打印请求日志时调用了 okhttp4 才有的 Headers.spliterator()，
+            低版本没有这个方法，一发起请求就抛：
+              NoSuchMethodError: okhttp3.Headers.spliterator()
+            注意 okhttp 4.x 由 Kotlin 编写，所以必须同时引入 kotlin-stdlib，
+            否则会连锁出现 NoClassDefFoundError: kotlin/jvm/internal/Intrinsics。
+        -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.12.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+            <version>1.9.10</version>
         </dependency>
 
     </dependencies>

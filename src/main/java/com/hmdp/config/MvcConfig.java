@@ -25,7 +25,9 @@ public class MvcConfig implements WebMvcConfigurer {
                         "/user/code",
                         "/shop/**",
                         "/shop-type/**",
-                        "/blog/hot"
+                        "/blog/hot",
+                        // AI 智能客服：未登录也要能用（未登录时按 IP 做限流与会话隔离）
+                        "/ai/**"
                 ).order(1);
         //token刷新的拦截器
         registry.addInterceptor(new RefreshTokenInterceptor(stringRedisTemplate))

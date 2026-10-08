@@ -88,7 +88,8 @@ public class ShopAssistantTools {
     public String bookAppointment(
             @P("商家id，必须是搜索结果里出现过的id") Long shopId,
             @P("到店时间，用户口述即可，例如：今晚18点、明天中午12点") String timeSlot,
-            @P("到店人数，用户没说就填1") Integer peopleCount) {
+            @P("到店人数，用户没说就填1") Integer peopleCount,
+            @P("当前会话标识，原样传入系统提示里给你的 sessionId") String sessionId) {
         if (shopId == null) {
             return "预约失败：缺少商家id";
         }
@@ -102,7 +103,7 @@ public class ShopAssistantTools {
         int people = (peopleCount == null || peopleCount <= 0) ? 1 : peopleCount;
 
         Appointment appointment = new Appointment()
-                .setUserId(currentUserId())
+                .setUserId(resolveUserId(sessionId))
                 .setShopId(shopId)
                 .setShopName(shop.getName())
                 .setTimeSlot(timeSlot)
@@ -123,8 +124,9 @@ public class ShopAssistantTools {
      * 工具4：查我的预约
      */
     @Tool("查询当前用户自己已经提交的到店预约记录。当用户问「我约了什么」「我的预约」时调用。")
-    public String listMyAppointments() {
-        Long userId = currentUserId();
+    public String listMyAppointments(
+            @P("当前会话标识，原样传入系统提示里给你的 sessionId") String sessionId) {
+        Long userId = resolveUserId(sessionId);
         List<Appointment> list = appointmentMapper.selectList(
                 new LambdaQueryWrapper<Appointment>()
                         .eq(Appointment::getUserId, userId)
@@ -178,5 +180,32 @@ public class ShopAssistantTools {
             // 工具类被非 Web 线程调用时取不到，忽略走游客
         }
         return GUEST_USER_ID;
+    }
+
+    /**
+     * 当前会话 id。
+     * <p>
+     * 为什么工具里需要这个：AI 客服「未登录也能用」，这时所有游客共用 userId=0，
+     * 如果预约记录只按 userId 隔离，A 游客能查到 B 游客的预约（实测确实会串数据）。
+     * 所以游客场景改用「会话 id」隔离。
+     * <p>
+     * 注意 langchain4j 0.35.0 还没有 ToolContext（那是更高版本的能力），
+     * 所以这里用最简单可靠的做法：把 sessionId 显式声明成工具参数，
+     * 由大模型从上下文里带上（系统提示词里已经交代了这个参数的含义）。
+     * 登录用户优先用真实 userId，这样同一用户换会话也能看到自己的历史预约。
+     */
+    private Long resolveUserId(String sessionId) {
+        try {
+            if (UserHolder.getUser() != null) {
+                return UserHolder.getUser().getId();
+            }
+        } catch (Exception e) {
+            // 非 Web 线程取不到，忽略走游客
+        }
+        // 游客：把会话 id 做一个稳定的数值映射，与真实用户 id 区分开（避免撞号）
+        if (StrUtil.isBlank(sessionId)) {
+            return GUEST_USER_ID;
+        }
+        return GUEST_USER_ID - (long) Math.abs(sessionId.hashCode());
     }
 }
